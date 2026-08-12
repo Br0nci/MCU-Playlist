@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCU Doomsday Checklist</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+            color: #e0e0e0;
+            padding: 12px;
+            line-height: 1.4;
+            min-height: 100vh;
+        }
+        
+        .password-modal {
+            display: flex;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .password-modal.hidden {
+            display: none;
+        }
+        
+        .password-box {
+            text-align: center;
+            max-width: 320px;
+            background: rgba(20, 20, 20, 0.9);
+            border: 2px solid #e50914;
+            border-radius: 12px;
+            padding: 32px 24px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .password-box h1 {
+            font-size: 48px;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, #e50914, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+        }
+        
+        .password-box p {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+        
+        .password-input-group input {
+            width: 100%;
+            padding: 12px 14px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 14px;
+            margin-bottom: 12px;
+            transition: border 0.2s;
+        }
+        
+        .password-input-group input:focus {
+            outline: none;
+            border-color: #e50914;
+        }
+        
+        .password-input-group button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #e50914, #cc0810);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: transform 0.2s;
+        }
+        
+        .password-input-group button:hover {
+            transform: scale(1.02);
+        }
+        
+        .error {
+            color: #ff6b6b;
+            font-size: 12px;
+            margin-top: 12px;
+            display: none;
+            font-weight: 600;
+        }
+        
+        .error.show {
+            display: block;
+        }
+        
+        .app {
+            display: none;
+        }
+        
+        .app.show {
+            display: block;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e50914;
+        }
+        
+        h2 {
+            font-size: 28px;
+            margin-bottom: 4px;
+            background: linear-gradient(135deg, #e50914, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 900;
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            color: #888;
+            font-weight: 500;
+        }
+        
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .mode-btn {
+            padding: 11px 12px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            color: #aaa;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .mode-btn:hover {
+            border-color: #e50914;
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, #e50914, #cc0810);
+            border-color: #e50914;
+            color: white;
+            box-shadow: 0 0 20px rgba(229, 9, 20, 0.4);
+        }
+        
+        .progress {
+            margin-bottom: 20px;
+            background: rgba(20, 20, 20, 0.5);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #333;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #222;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e50914, #ff6b6b);
+            width: 0%;
+            transition: width 0.3s;
+            box-shadow: 0 0 10px rgba(229, 9, 20, 0.6);
+        }
+        
+        .list {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+        
+        .list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .list::-webkit-scrollbar-track {
+            background: #111;
+        }
+        
+        .list::-webkit-scrollbar-thumb {
+            background: #e50914;
+            border-radius: 3px;
+        }
+        
+        .section {
+            margin-bottom: 18px;
+        }
+        
+        .section-title {
+            font-size: 10px;
+            font-weight: 700;
+            color: #e50914;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px 0;
+            border-bottom: 2px solid #e50914;
+            margin-bottom: 12px;
+        }
+        
+        .item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(20, 20, 20, 0.6);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid #222;
+            align-items: flex-start;
+            transition: all 0.2s;
+        }
+        
+        .item:hover {
+            background: rgba(30, 30, 30, 0.8);
+            border-color: #e50914;
+        }
+        
+        .item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-top: 3px;
+            accent-color: #e50914;
+        }
+        
+        .item-poster {
+            width: 50px;
+            height: 72px;
+            flex-shrink: 0;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #e50914, #8b0000);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 2px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .item-poster::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(0,0,0,0.1) 10px,
+                rgba(0,0,0,0.1) 20px
+            );
+        }
+        
+        .item-poster-icon {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .item-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .item-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 3px;
+            color: #e0e0e0;
+        }
+        
+        .item-meta {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .item-reason {
+            font-size: 10px;
+            color: #888;
+            font-style: italic;
+        }
+        
+        .item.checked {
+            opacity: 0.6;
+        }
+        
+        .item.checked .item-title {
+            text-decoration: line-through;
+            color: #555;
+        }
+        
+        .warning {
+            display: inline-block;
+            font-size: 9px;
+            background: rgba(229, 9, 20, 0.2);
+            color: #ff8a8a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 4px;
+            border: 1px solid rgba(229, 9, 20, 0.4);
+            font-weight: 600;
+        }
+        
+        .profile-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .profile-modal.active {
+            display: flex;
+        }
+        
+        .profile-box {
+            background: rgba(20, 20, 20, 0.95);
+            border: 2px solid #e50914;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 300px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .profile-box h3 {
+            margin-bottom: 8px;
+            font-size: 20px;
+            color: #e0e0e0;
+            font-weight: 700;
+        }
+        
+        .profile-box p {
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .profile-box input {
+            width: 100%;
+            padding: 10px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 6px;
+            color: #e0e0e0;
+            margin-bottom: 12px;
+            font-size: 14px;
+            transition: border 0.2s;
+        }
+        
+        .profile-box input:focus {
+            outline: none;
+            border-color: #e50914;
+        }
+        
+        .profile-box button {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #e50914, #cc0810);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .profile-info {
+            text-align: center;
+            padding: 10px 12px;
+            background: rgba(20, 20, 20, 0.6);
+            border-radius: 6px;
+            margin-bottom: 12px;
+            font-size: 11px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #333;
+        }
+        
+        .profile-info button {
+            padding: 4px 8px;
+            font-size: 10px;
+            background: #333;
+            border: 1px solid #444;
+            border-radius: 4px;
+            color: #888;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .profile-info button:hover {
+            background: #e50914;
+            color: white;
+            border-color: #e50914;
+        }
+    </style>
+</head>
+<body>
+    <!-- PASSWORD LOGIN -->
+    <div class="password-modal" id="passwordModal">
+        <div class="password-box">
+            <h1>🎬</h1>
+            <p>MCU DOOMSDAY CHECKLIST</p>
+            
+            <div class="password-input-group">
+                <input type="password" id="passwordInput" placeholder="Wachtwoord..." maxlength="50">
+                <button onclick="checkPassword()">Ontgrendel</button>
+                <div class="error" id="passwordError">❌ Fout wachtwoord</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- APP CONTENT -->
+    <div class="app" id="appContent">
+        <div class="header">
+            <h2>🎬 MCU DOOMSDAY</h2>
+            <p class="subtitle">Dec 18, 2026 • Road to Doomsday</p>
+        </div>
+        
+        <div class="controls">
+            <button class="mode-btn" data-mode="speedrun">Speedrun</button>
+            <button class="mode-btn" data-mode="movies">Essentieel</button>
+            <button class="mode-btn active" data-mode="complete">Compleet</button>
+        </div>
+        
+        <div class="progress">
+            <div class="progress-label">
+                <span>📊 Voortgang</span>
+                <span id="progress-text">0/70</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-bar"></div>
+            </div>
+        </div>
+        
+        <div class="profile-modal" id="profileModal">
+            <div class="profile-box">
+                <h3>👋 Welkom!</h3>
+                <p>Voer je naam in om je voortgang op te slaan</p>
+                <input type="text" id="profileInput" placeholder="Jouw naam..." maxlength="20">
+                <button onclick="setProfile()">Start Kijken</button>
+            </div>
+        </div>
+        
+        <div class="profile-info" id="profileInfo" style="display: none;">
+            <span>👤 <span id="profileName"></span></span>
+            <button onclick="changeProfile()">Wissel</button>
+        </div>
+        
+        <div class="list" id="list"></div>
+    </div>
+
+    <script>
+        // POSTER ICONS - per film/serie
+        const posterIcons = {
+            1: '🦾',   // Iron Man
+            2: '💪',   // Hulk
+            3: '🔫',   // Iron Man 2
+            4: '⚡',   // Thor
+            5: '🛡️',   // Cap First
+            6: '👽',   // Avengers
+            7: '💥',   // Iron Man 3
+            8: '🌑',   // Thor Dark World
+            9: '🕵️',   // Winter Soldier
+            10: '🌌',  // Guardians
+            11: '⭐',  // Guardians 2
+            12: '🤖',  // Age of Ultron
+            13: '🐜',  // Ant-Man
+            14: '⚔️',  // Civil War
+            15: '🔴',  // Black Widow
+            16: '🔮',  // Doctor Strange
+            17: '🕷️',  // Spider-Man HC
+            18: '☄️',  // Thor Ragnarok
+            19: '👑',  // Black Panther
+            20: '💎',  // Infinity War
+            21: '🐝',  // Ant-Man Wasp
+            22: '✨',  // Captain Marvel
+            23: '⏰',  // Endgame
+            24: '🌍',  // Far From Home
+            25: '📺',  // Daredevil S1
+            26: '📺',  // Jessica Jones S1
+            27: '📺',  // Daredevil S2
+            28: '📺',  // Punisher S1
+            29: '📺',  // Daredevil S3
+            30: '📺',  // Punisher S2
+            31: '📺',  // WandaVision
+            32: '📺',  // TFATWS
+            33: '📺',  // Loki S1
+            34: '📺',  // What If
+            35: '🥋',  // Shang-Chi
+            36: '🌟',  // Eternals
+            37: '📺',  // Hawkeye
+            38: '🌀',  // No Way Home
+            39: '📺',  // Hawkeye fin
+            40: '📺',  // Moon Knight
+            41: '🌈',  // Doctor Strange 2
+            42: '📺',  // Ms Marvel
+            43: '⚡',  // Thor Love
+            44: '📺',  // She-Hulk
+            45: '🌊',  // BP Wakanda
+            46: '⏳',  // Ant-Man Quantumania
+            47: '📺',  // Loki S2
+            48: '🚀',  // Guardians 3
+            49: '📺',  // Secret Invasion
+            50: '✨',  // The Marvels
+            51: '📺',  // Echo
+            52: '🔴',  // X-Men
+            53: '🔴',  // X2
+            54: '🔴',  // X-Men Last
+            55: '🔴',  // X-Men DOFP
+            56: '🔴',  // Deadpool
+            57: '🐺',  // Logan
+            58: '🔴',  // Deadpool 2
+            59: '🐺',  // Deadpool Wolverine
+            60: '📺',  // Agatha
+            61: '🛡️',  // Captain America BNW
+            62: '📺',  // Born Again S1
+            63: '⚡',  // Thunderbolts
+            64: '📺',  // Ironheart
+            65: '4️⃣',  // Fantastic Four
+            66: '📺',  // Wonder Man
+            67: '📺',  // Born Again S2
+            68: '📺',  // Punisher OLK
+            69: '🕷️',  // Spider-Man BND
+            70: '📺',  // VisionQuest
+        };
+        
+        // PASSWORD CHECK
+        const CORRECT_PASSWORD = 'Lijst2026!';
+        
+        function checkPassword() {
+            const input = document.getElementById('passwordInput');
+            const error = document.getElementById('passwordError');
+            
+            if (input.value === CORRECT_PASSWORD) {
+                localStorage.setItem('mcu-authenticated', 'true');
+                document.getElementById('passwordModal').classList.add('hidden');
+                document.getElementById('appContent').classList.add('show');
+                initProfile();
+            } else {
+                error.classList.add('show');
+                input.value = '';
+            }
+        }
+        
+        document.getElementById('passwordInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') checkPassword();
+        });
+        
+        // Check if already authenticated
+        if (localStorage.getItem('mcu-authenticated') === 'true') {
+            document.getElementById('passwordModal').classList.add('hidden');
+            document.getElementById('appContent').classList.add('show');
+        }
+        
+        // MCU CHECKLIST APP
+        const data = {
+            speedrun: [
+                { num: 1, title: 'The Avengers', year: 2012, duration: '2h 23m', section: 'Speedrun', reason: 'First team-up' },
+                { num: 2, title: 'Avengers: Age of Ultron', year: 2015, duration: '2h 21m', section: 'Speedrun', reason: 'Vision, Wanda' },
+                { num: 5, title: 'Captain America: Civil War', year: 2016, duration: '2h 27m', section: 'Speedrun', reason: 'Avengers split', warning: 'STOP CREDITS' },
+                { num: 15, title: 'Black Widow', year: 2021, duration: '2h 14m', section: 'Speedrun', reason: 'Yelena, Red Guardian' },
+                { num: 20, title: 'Avengers: Infinity War', year: 2018, duration: '2h 29m', section: 'Speedrun', reason: 'The Snap' },
+                { num: 23, title: 'Avengers: Endgame', year: 2019, duration: '3h 2m', section: 'Speedrun', reason: 'Time travel' },
+                { num: 33, title: 'Loki Season 1', year: 2021, duration: '6h', section: 'Speedrun', reason: 'Multiverse opens' },
+                { num: 45, title: 'Black Panther: Wakanda Forever', year: 2022, duration: '2h 41m', section: 'Speedrun', reason: 'Namor in Doomsday' },
+                { num: 46, title: 'Ant-Man: Quantumania', year: 2023, duration: '2h 5m', section: 'Speedrun', reason: 'Cassie, Kang' },
+                { num: 47, title: 'Loki Season 2', year: 2023, duration: '6h', section: 'Speedrun', reason: 'Multiverse finale' },
+                { num: 59, title: 'Deadpool & Wolverine', year: 2024, duration: '2h 8m', section: 'Speedrun', reason: 'Wolverine in MCU' },
+                { num: 61, title: 'Captain America: Brave New World', year: 2025, duration: '1h 58m', section: 'Speedrun', reason: 'Sam as Cap' },
+                { num: 63, title: 'Thunderbolts*', year: 2025, duration: '2h 10m', section: 'Speedrun', reason: 'New Avengers', warning: 'WATCH POST' },
+                { num: 65, title: 'The Fantastic Four: First Steps', year: 2025, duration: '2h 5m', section: 'Speedrun', reason: 'Doctor Doom', warning: 'DIRECT SETUP' },
+                { num: 69, title: 'Spider-Man: Brand New Day', year: 2026, duration: '2h', section: 'Speedrun', reason: 'Last before Doomsday' },
+            ],
+            movies: [
+                { num: 1, title: 'Iron Man', year: 2008, duration: '2h 6m', section: 'Infinity Saga', reason: 'Foundation' },
+                { num: 2, title: 'The Incredible Hulk', year: 2008, duration: '2h 12m', section: 'Infinity Saga', reason: 'Villains return' },
+                { num: 3, title: 'Iron Man 2', year: 2010, duration: '2h 4m', section: 'Infinity Saga', reason: 'Black Widow' },
+                { num: 4, title: 'Thor', year: 2011, duration: '1h 54m', section: 'Infinity Saga', reason: 'Thor intro' },
+                { num: 5, title: 'Captain America: The First Avenger', year: 2011, duration: '2h 4m', section: 'Infinity Saga', reason: 'Steve Rogers' },
+                { num: 6, title: 'The Avengers', year: 2012, duration: '2h 23m', section: 'Infinity Saga', reason: 'First team' },
+                { num: 7, title: 'Iron Man 3', year: 2013, duration: '2h 10m', section: 'Infinity Saga', reason: 'Tony arc' },
+                { num: 8, title: 'Thor: The Dark World', year: 2013, duration: '1h 52m', section: 'Infinity Saga', reason: 'Reality Stone' },
+                { num: 9, title: 'Captain America: The Winter Soldier', year: 2014, duration: '2h 16m', section: 'Infinity Saga', reason: 'Reshapes universe' },
+                { num: 10, title: 'Guardians of the Galaxy', year: 2014, duration: '2h 2m', section: 'Infinity Saga', reason: 'Guardians' },
+                { num: 11, title: 'Guardians of the Galaxy Vol. 2', year: 2017, duration: '2h 16m', section: 'Infinity Saga', reason: 'Peter father' },
+                { num: 12, title: 'Avengers: Age of Ultron', year: 2015, duration: '2h 21m', section: 'Infinity Saga', reason: 'Vision, Wanda' },
+                { num: 13, title: 'Ant-Man', year: 2015, duration: '1h 57m', section: 'Infinity Saga', reason: 'Scott Lang' },
+                { num: 14, title: 'Captain America: Civil War', year: 2016, duration: '2h 27m', section: 'Infinity Saga', reason: 'Avengers split' },
+                { num: 15, title: 'Black Widow', year: 2021, duration: '2h 14m', section: 'Infinity Saga', reason: 'Yelena, Red Guardian' },
+                { num: 16, title: 'Doctor Strange', year: 2016, duration: '1h 55m', section: 'Infinity Saga', reason: 'Magic, Time Stone' },
+                { num: 17, title: 'Spider-Man: Homecoming', year: 2017, duration: '2h 13m', section: 'Infinity Saga', reason: 'Peter Parker' },
+                { num: 18, title: 'Thor: Ragnarok', year: 2017, duration: '2h 10m', section: 'Infinity Saga', reason: 'Thor transform' },
+                { num: 19, title: 'Black Panther', year: 2018, duration: '2h 14m', section: 'Infinity Saga', reason: 'T\'Challa' },
+                { num: 20, title: 'Avengers: Infinity War', year: 2018, duration: '2h 29m', section: 'Infinity Saga', reason: 'The Snap' },
+                { num: 21, title: 'Ant-Man and the Wasp', year: 2018, duration: '2h 3m', section: 'Infinity Saga', reason: 'Quantum realm' },
+                { num: 22, title: 'Captain Marvel', year: 2019, duration: '2h 3m', section: 'Infinity Saga', reason: 'Carol Danvers' },
+                { num: 23, title: 'Avengers: Endgame', year: 2019, duration: '3h 2m', section: 'Infinity Saga', reason: 'Time travel' },
+                { num: 24, title: 'Spider-Man: Far From Home', year: 2019, duration: '2h 9m', section: 'Infinity Saga', reason: 'Multiverse' },
+                { num: 35, title: 'Shang-Chi and the Ten Rings', year: 2021, duration: '2h 12m', section: 'Phase 4/5', reason: 'Shang-Chi' },
+                { num: 36, title: 'Eternals', year: 2021, duration: '2h 36m', section: 'Phase 4/5', reason: 'Celestial' },
+                { num: 38, title: 'Spider-Man: No Way Home', year: 2021, duration: '2h 48m', section: 'Phase 4/5', reason: 'Multiverse' },
+                { num: 41, title: 'Doctor Strange: Multiverse of Madness', year: 2022, duration: '2h 6m', section: 'Phase 4/5', reason: 'Multiverse rules' },
+                { num: 43, title: 'Thor: Love and Thunder', year: 2022, duration: '2h 19m', section: 'Phase 4/5', reason: 'Thor arc' },
+                { num: 45, title: 'Black Panther: Wakanda Forever', year: 2022, duration: '2h 41m', section: 'Phase 4/5', reason: 'Namor' },
+                { num: 46, title: 'Ant-Man: Quantumania', year: 2023, duration: '2h 5m', section: 'Phase 4/5', reason: 'Cassie, Kang' },
+                { num: 48, title: 'Guardians of the Galaxy Vol. 3', year: 2023, duration: '2h 20m', section: 'Phase 4/5', reason: 'Guardians goodbye' },
+                { num: 50, title: 'The Marvels', year: 2023, duration: '1h 45m', section: 'Phase 4/5', reason: 'Multiverse hopping' },
+                { num: 59, title: 'Deadpool & Wolverine', year: 2024, duration: '2h 8m', section: 'Phase 5', reason: 'Wolverine, X-Men' },
+                { num: 61, title: 'Captain America: Brave New World', year: 2025, duration: '1h 58m', section: 'Phase 6', reason: 'Sam as Cap' },
+                { num: 63, title: 'Thunderbolts*', year: 2025, duration: '2h 10m', section: 'Phase 6', reason: 'New Avengers' },
+                { num: 65, title: 'The Fantastic Four: First Steps', year: 2025, duration: '2h 5m', section: 'Phase 6', reason: 'Doctor Doom' },
+                { num: 69, title: 'Spider-Man: Brand New Day', year: 2026, duration: '2h', section: 'Phase 6', reason: 'Last before Doomsday' },
+            ],
+            complete: [
+                { num: 1, title: 'Iron Man', year: 2008, duration: '2h 6m', section: 'I. Infinity Saga', reason: 'Foundation' },
+                { num: 2, title: 'The Incredible Hulk', year: 2008, duration: '2h 12m', section: 'I. Infinity Saga', reason: 'Villains 2025' },
+                { num: 3, title: 'Iron Man 2', year: 2010, duration: '2h 4m', section: 'I. Infinity Saga', reason: 'Black Widow' },
+                { num: 4, title: 'Thor', year: 2011, duration: '1h 54m', section: 'I. Infinity Saga', reason: 'Thor' },
+                { num: 5, title: 'Captain America: The First Avenger', year: 2011, duration: '2h 4m', section: 'I. Infinity Saga', reason: 'Steve' },
+                { num: 6, title: 'The Avengers', year: 2012, duration: '2h 23m', section: 'I. Infinity Saga', reason: 'First team' },
+                { num: 7, title: 'Iron Man 3', year: 2013, duration: '2h 10m', section: 'I. Infinity Saga', reason: 'Tony' },
+                { num: 8, title: 'Thor: The Dark World', year: 2013, duration: '1h 52m', section: 'I. Infinity Saga', reason: 'Reality Stone' },
+                { num: 9, title: 'Captain America: The Winter Soldier', year: 2014, duration: '2h 16m', section: 'I. Infinity Saga', reason: 'Reshapes MCU' },
+                { num: 10, title: 'Guardians of the Galaxy', year: 2014, duration: '2h 2m', section: 'I. Infinity Saga', reason: 'Guardians' },
+                { num: 11, title: 'Guardians of the Galaxy Vol. 2', year: 2017, duration: '2h 16m', section: 'I. Infinity Saga', reason: 'Peter father' },
+                { num: 12, title: 'Avengers: Age of Ultron', year: 2015, duration: '2h 21m', section: 'I. Infinity Saga', reason: 'Vision, Wanda' },
+                { num: 13, title: 'Ant-Man', year: 2015, duration: '1h 57m', section: 'I. Infinity Saga', reason: 'Scott Lang' },
+                { num: 14, title: 'Captain America: Civil War', year: 2016, duration: '2h 27m', section: 'I. Infinity Saga', reason: 'Avengers split' },
+                { num: 15, title: 'Black Widow', year: 2021, duration: '2h 14m', section: 'I. Infinity Saga', reason: 'Yelena, Red' },
+                { num: 16, title: 'Doctor Strange', year: 2016, duration: '1h 55m', section: 'I. Infinity Saga', reason: 'Magic, Time' },
+                { num: 17, title: 'Spider-Man: Homecoming', year: 2017, duration: '2h 13m', section: 'I. Infinity Saga', reason: 'Peter' },
+                { num: 18, title: 'Thor: Ragnarok', year: 2017, duration: '2h 10m', section: 'I. Infinity Saga', reason: 'Thor' },
+                { num: 19, title: 'Black Panther', year: 2018, duration: '2h 14m', section: 'I. Infinity Saga', reason: 'T\'Challa' },
+                { num: 20, title: 'Avengers: Infinity War', year: 2018, duration: '2h 29m', section: 'I. Infinity Saga', reason: 'The Snap' },
+                { num: 21, title: 'Ant-Man and the Wasp', year: 2018, duration: '2h 3m', section: 'I. Infinity Saga', reason: 'Quantum' },
+                { num: 22, title: 'Captain Marvel', year: 2019, duration: '2h 3m', section: 'I. Infinity Saga', reason: 'Carol' },
+                { num: 23, title: 'Avengers: Endgame', year: 2019, duration: '3h 2m', section: 'I. Infinity Saga', reason: 'Time travel' },
+                { num: 24, title: 'Spider-Man: Far From Home', year: 2019, duration: '2h 9m', section: 'I. Infinity Saga', reason: 'Multiverse' },
+                { num: 25, title: 'Daredevil Season 1', year: 2015, duration: '13h', section: 'II. Street Level', reason: 'Born Again' },
+                { num: 26, title: 'Jessica Jones Season 1', year: 2015, duration: '13h', section: 'II. Street Level', reason: 'Jessica' },
+                { num: 27, title: 'Daredevil Season 2', year: 2016, duration: '13h', section: 'II. Street Level', reason: 'Punisher' },
+                { num: 28, title: 'The Punisher Season 1', year: 2017, duration: '13h', section: 'II. Street Level', reason: 'Frank' },
+                { num: 29, title: 'Daredevil Season 3', year: 2018, duration: '13h', section: 'II. Street Level', reason: 'Best' },
+                { num: 30, title: 'The Punisher Season 2', year: 2019, duration: '13h', section: 'II. Street Level', reason: 'Punisher' },
+                { num: 31, title: 'WandaVision', year: 2021, duration: '6h', section: 'III. Multiverse', reason: 'Wanda' },
+                { num: 32, title: 'The Falcon and the Winter Soldier', year: 2021, duration: '5h', section: 'III. Multiverse', reason: 'Sam Cap' },
+                { num: 33, title: 'Loki Season 1', year: 2021, duration: '6h', section: 'III. Multiverse', reason: 'Multiverse!' },
+                { num: 34, title: 'What If...? Season 1', year: 2021, duration: '5h', section: 'III. Multiverse', reason: 'Context' },
+                { num: 35, title: 'Shang-Chi and the Ten Rings', year: 2021, duration: '2h 12m', section: 'III. Multiverse', reason: 'Shang-Chi' },
+                { num: 36, title: 'Eternals', year: 2021, duration: '2h 36m', section: 'III. Multiverse', reason: 'Celestial' },
+                { num: 37, title: 'Hawkeye (1-5)', year: 2021, duration: '~3h', section: 'III. Multiverse', reason: 'Clint' },
+                { num: 38, title: 'Spider-Man: No Way Home', year: 2021, duration: '2h 48m', section: 'III. Multiverse', reason: 'Multiverse!' },
+                { num: 39, title: 'Hawkeye (6)', year: 2021, duration: '~1h', section: 'III. Multiverse', reason: 'Finale' },
+                { num: 40, title: 'Moon Knight', year: 2022, duration: '4h', section: 'III. Multiverse', reason: 'Marc' },
+                { num: 41, title: 'Doctor Strange: Multiverse', year: 2022, duration: '2h 6m', section: 'III. Multiverse', reason: 'Multiverse' },
+                { num: 42, title: 'Ms. Marvel', year: 2022, duration: '4h', section: 'III. Multiverse', reason: 'Kamala' },
+                { num: 43, title: 'Thor: Love and Thunder', year: 2022, duration: '2h 19m', section: 'III. Multiverse', reason: 'Thor' },
+                { num: 44, title: 'She-Hulk', year: 2022, duration: '5h', section: 'III. Multiverse', reason: 'Hulk' },
+                { num: 45, title: 'Black Panther: Wakanda Forever', year: 2022, duration: '2h 41m', section: 'III. Multiverse', reason: 'Namor' },
+                { num: 46, title: 'Ant-Man: Quantumania', year: 2023, duration: '2h 5m', section: 'III. Multiverse', reason: 'Kang' },
+                { num: 47, title: 'Loki Season 2', year: 2023, duration: '6h', section: 'III. Multiverse', reason: 'Loki' },
+                { num: 48, title: 'Guardians of the Galaxy Vol. 3', year: 2023, duration: '2h 20m', section: 'III. Multiverse', reason: 'Goodbye' },
+                { num: 49, title: 'Secret Invasion', year: 2023, duration: '6h', section: 'III. Multiverse', reason: 'Fury' },
+                { num: 50, title: 'The Marvels', year: 2023, duration: '1h 45m', section: 'III. Multiverse', reason: 'Hopping' },
+                { num: 51, title: 'Echo', year: 2024, duration: '4h', section: 'III. Multiverse', reason: 'Maya' },
+                { num: 52, title: 'X-Men', year: 2000, duration: '1h 44m', section: 'IV. X-Men', reason: 'Xavier, Magneto' },
+                { num: 53, title: 'X2: X-Men United', year: 2003, duration: '2h 14m', section: 'IV. X-Men', reason: 'Nightcrawler' },
+                { num: 54, title: 'X-Men: The Last Stand', year: 2006, duration: '1h 44m', section: 'IV. X-Men', reason: 'Beast' },
+                { num: 55, title: 'X-Men: Days of Future Past', year: 2014, duration: '2h 11m', section: 'IV. X-Men', reason: 'Timeline' },
+                { num: 56, title: 'Deadpool', year: 2016, duration: '1h 48m', section: 'IV. X-Men', reason: 'Wade' },
+                { num: 57, title: 'Logan', year: 2017, duration: '2h 17m', section: 'IV. X-Men', reason: 'Wolverine' },
+                { num: 58, title: 'Deadpool 2', year: 2018, duration: '1h 59m', section: 'IV. X-Men', reason: 'Cable' },
+                { num: 59, title: 'Deadpool & Wolverine', year: 2024, duration: '2h 8m', section: 'V. Phase 6', reason: 'Bridge' },
+                { num: 60, title: 'Agatha All Along', year: 2024, duration: '8h', section: 'V. Phase 6', reason: 'Magic' },
+                { num: 61, title: 'Captain America: Brave New World', year: 2025, duration: '1h 58m', section: 'V. Phase 6', reason: 'Sam' },
+                { num: 62, title: 'Daredevil: Born Again S1', year: 2025, duration: '6h', section: 'V. Phase 6', reason: 'Matt' },
+                { num: 63, title: 'Thunderbolts*', year: 2025, duration: '2h 10m', section: 'V. Phase 6', reason: 'New Team' },
+                { num: 64, title: 'Ironheart', year: 2025, duration: '6h', section: 'V. Phase 6', reason: 'Riri' },
+                { num: 65, title: 'The Fantastic Four: First Steps', year: 2025, duration: '2h 5m', section: 'V. Phase 6', reason: 'Doom' },
+                { num: 66, title: 'Wonder Man', year: 2026, duration: '~6h', section: 'V. Phase 6', reason: 'Eric' },
+                { num: 67, title: 'Daredevil: Born Again S2', year: 2026, duration: '~6h', section: 'V. Phase 6', reason: 'Cross' },
+                { num: 68, title: 'The Punisher: One Last Kill', year: 2026, duration: '~90m', section: 'V. Phase 6', reason: 'Frank' },
+                { num: 69, title: 'Spider-Man: Brand New Day', year: 2026, duration: '2h', section: 'V. Phase 6', reason: 'Last' },
+                { num: 70, title: 'VisionQuest', year: 2026, duration: '6h', section: 'V. Phase 6', reason: 'Final!' },
+            ]
+        };
+        
+        let currentMode = 'complete';
+        let currentProfile = localStorage.getItem('mcu-profile');
+        let checked = {};
+        
+        function getProfileKey() {
+            return `mcu-doomsday-${currentProfile}`;
+        }
+        
+        function setProfile() {
+            const input = document.getElementById('profileInput');
+            const name = input.value.trim();
+            
+            if (!name) {
+                alert('Voer alsjeblieft je naam in');
+                return;
+            }
+            
+            currentProfile = name;
+            localStorage.setItem('mcu-profile', currentProfile);
+            checked = JSON.parse(localStorage.getItem(getProfileKey()) || '{}');
+            
+            document.getElementById('profileModal').classList.remove('active');
+            document.getElementById('profileInfo').style.display = 'flex';
+            document.getElementById('profileName').textContent = currentProfile;
+            
+            render();
+        }
+        
+        function changeProfile() {
+            localStorage.removeItem('mcu-profile');
+            currentProfile = null;
+            checked = {};
+            document.getElementById('profileModal').classList.add('active');
+            document.getElementById('profileInfo').style.display = 'none';
+            document.getElementById('profileInput').value = '';
+        }
+        
+        function initProfile() {
+            if (!currentProfile) {
+                document.getElementById('profileModal').classList.add('active');
+            } else {
+                checked = JSON.parse(localStorage.getItem(getProfileKey()) || '{}');
+                document.getElementById('profileInfo').style.display = 'flex';
+                document.getElementById('profileName').textContent = currentProfile;
+            }
+            
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.addEventListener('click', () => setMode(btn.dataset.mode));
+            });
+            
+            document.getElementById('profileInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') setProfile();
+            });
+            
+            render();
+        }
+        
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            render();
+        }
+        
+        function toggleItem(num) {
+            checked[num] = !checked[num];
+            localStorage.setItem(getProfileKey(), JSON.stringify(checked));
+            render();
+        }
+        
+        function render() {
+            const items = data[currentMode];
+            const listEl = document.getElementById('list');
+            listEl.innerHTML = '';
+            
+            const grouped = {};
+            items.forEach(item => {
+                if (!grouped[item.section]) grouped[item.section] = [];
+                grouped[item.section].push(item);
+            });
+            
+            let totalChecked = 0;
+            
+            Object.keys(grouped).forEach(section => {
+                const sectionEl = document.createElement('div');
+                sectionEl.className = 'section';
+                
+                const titleEl = document.createElement('div');
+                titleEl.className = 'section-title';
+                titleEl.textContent = section;
+                sectionEl.appendChild(titleEl);
+                
+                grouped[section].forEach(item => {
+                    const isChecked = checked[item.num];
+                    if (isChecked) totalChecked++;
+                    
+                    const itemEl = document.createElement('div');
+                    itemEl.className = `item ${isChecked ? 'checked' : ''}`;
+                    
+                    const warning = item.warning ? `<span class="warning">${item.warning}</span>` : '';
+                    const icon = posterIcons[item.num] || '🎬';
+                    
+                    itemEl.innerHTML = `
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleItem(${item.num})">
+                        <div class="item-poster">
+                            <span class="item-poster-icon">${icon}</span>
+                        </div>
+                        <div class="item-content">
+                            <div class="item-title">${item.num}. ${item.title}</div>
+                            <div class="item-meta">${item.year} • ${item.duration}</div>
+                            <div class="item-reason">→ ${item.reason}${warning}</div>
+                        </div>
+                    `;
+                    
+                    sectionEl.appendChild(itemEl);
+                });
+                
+                listEl.appendChild(sectionEl);
+            });
+            
+            const total = items.length;
+            const percent = Math.round((totalChecked / total) * 100);
+            
+            document.getElementById('progress-text').textContent = `${totalChecked}/${total}`;
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+    </script>
+</body>
+</html>
